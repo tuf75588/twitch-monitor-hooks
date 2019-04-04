@@ -1,28 +1,41 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useContext, useReducer, useState, useEffect } from 'react';
+import { reducer } from './reducers/index';
+import { Store } from './context/index';
+import ChannelContainer from './components/ChannelContainer';
+import { getStreamData } from './utils/API';
+import styled from '@emotion/styled';
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
+const StyledHeader = styled.header`
+  padding: 2em;
+  color: #fff;
+  text-align: center;
+  background: ${(props) => props.background};
+`;
+
+function App(props) {
+  // create our applications global state reference.
+  const globalState = useContext(Store);
+  // create our reducer using our global state to get access to state and dispatch.
+  const [state, dispatch] = useReducer(reducer, globalState);
+  useEffect(() => {
+    getStreamData().then((res) => {
+      return Promise.all(res).then((info) => {
+        dispatch({ type: 'LOAD_CHANNELS', payload: info });
+      });
+    });
+  }, []);
+
+  return (
+    <Store.Provider value={{ state, dispatch }}>
+      <>
+        <StyledHeader background="cornflowerblue">
+          <h1 style={{ fontWeight: 100 }}>Twitch.tv Channel Monitor</h1>
+        </StyledHeader>
+
+        <ChannelContainer />
+      </>
+    </Store.Provider>
+  );
 }
 
 export default App;
